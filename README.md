@@ -12,6 +12,14 @@
 
 ---
 
+## 数据源与致谢
+
+- **上海图书馆开放数据平台（官方）**：https://opendata.library.sh.cn/opendata/
+  衷心感谢**上海图书馆官方**开放数据平台提供权威、丰富且持续维护的历史文献与文脉数据接口。本项目的全部核心数据能力（97 个 webapi）均建立在上海图书馆开放数据之上，若无官方的开放与授权，本项目无从实现。
+- **搜韵诗词**：https://api.sou-yun.cn/open （199 万首诗词，免 token）
+- 本仓库接口版权归各数据方所有，使用请遵守各平台开放数据的使用条款；调用方须使用自己在平台注册的 APIKey，本仓库不内置、不收集任何密钥。
+- 本项目已发布至 PyPI、MCP 官方 Registry（`io.github.FreyaBit/shanghai-library-open-data-mcp`）、Smithery、ModelScope 与 GitHub，便于各 MCP 客户端一键接入。
+
 ## 特性
 
 - 🧩 **12 个 MCP 工具**：覆盖家谱 / 古籍 / 碑帖 / 武康路 / 书目 / 地名志 / 红色事件 / 纪年表 / 电影 / 舆图 / 手迹 / 人名库等 97 个官方接口 + 搜韵诗词
@@ -89,6 +97,33 @@ uvx shanghai-library-open-data-mcp --transport http --port 8080      # Streamabl
 
 > 适合网页版 AI、手机端，或多人共用同一服务；需自行把服务跑在可访问的地址上。个人在编辑器本地使用，stdio 已足够，无需此模式。
 
+## 客户端配置示例
+
+三种客户端本质都是同一段 `mcpServers` JSON，区别只在配置文件路径。下面的示例用 `uvx` 拉起（免克隆仓库）；想用本地脚本，把 `command`/`args` 换成 `["python3","/绝对路径/slc_mcp_server.py"]` 即可。
+
+**WorkBuddy（本机已配置过一份）**
+配置文件：`~/.workbuddy/mcp.json`。本机已存在一份指向本地脚本 + Key 的配置，只需在连接器管理界面对「上海图书馆开放数据」点击 **信任** 即可在本会话启用；也可替换成下面的 `uvx` 写法。
+```json
+{
+  "mcpServers": {
+    "上海图书馆开放数据": {
+      "command": "uvx",
+      "args": ["shanghai-library-open-data-mcp"],
+      "env": { "SLC_API_KEY": "你的上图书APIKey" }
+    }
+  }
+}
+```
+
+**Cursor**
+配置文件：项目根目录 `.cursor/mcp.json` 或全局 `~/.cursor/mcp.json`（同一段 JSON）。
+
+**Claude Desktop / Claude Code**
+- Claude Desktop：把上面的 `mcpServers` 合并进 `%APPDATA%\Claude\claude_desktop_config.json`（Windows）或 `~/Library/Application Support/Claude/claude_desktop_config.json`（macOS）。
+- Claude Code 命令行：`claude mcp add 上海图书馆开放数据 -- uvx shanghai-library-open-data-mcp`
+
+> 说明：12 个工具里 `souyun_poem` / `souyun_rhyme` / `souyun_couplet` / `slc_endpoints` 免 Key 开箱即用，其余 8 个需要 `SLC_API_KEY`。已发布到 PyPI、MCP 官方 Registry（`io.github.FreyaBit/shanghai-library-open-data-mcp`）、Smithery、ModelScope、GitHub，均可一键拉起。
+
 ## APIKey 说明
 
 - 上海图书馆开放数据平台要求**每个调用者使用自己的 APIKey**（在平台注册后获取）。
@@ -121,14 +156,3 @@ OpenSH-mcp/
     ├── test_live.py          #   handler 级实测（GET/POST/搜韵）
     └── test_mcp.py           #   协议冒烟测试
 ```
-
-## 数据源与致谢
-
-- **上海图书馆开放数据平台（官方）**：https://opendata.library.sh.cn/opendata/
-  衷心感谢**上海图书馆官方**开放数据平台提供权威、丰富且持续维护的历史文献与文脉数据接口。本项目的全部核心数据能力均建立在上海图书馆开放数据之上，若无官方的开放与授权，本项目无从实现。
-- **搜韵诗词**：https://api.sou-yun.cn/open （199 万首诗词，免 token）
-- 本仓库接口版权归各数据方所有，使用请遵守各平台开放数据的使用条款。
-
-## License
-
-[MIT](LICENSE)
