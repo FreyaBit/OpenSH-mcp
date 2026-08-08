@@ -63,18 +63,25 @@ python3 tests/test_stdio.py
 }
 ```
 
-> WorkBuddy 用户可直接运行 `python3 setup_mcp_key.py --server 上海图书馆开放数据 --key 你的Key`
-> 一键写入 `~/.workbuddy/mcp.json`（参考 `mcp.json.template`），然后在连接器管理页点「Trust」。
-
 ### 通过 PyPI / uvx 安装（推荐，跨客户端通用）
 
 发布到 PyPI 后，任意支持 MCP 的客户端都能用一条命令拉起，无需克隆仓库：
 
 ```bash
 uvx shanghai-library-open-data-mcp              # 本地 stdio（默认）
+uvx shanghai-library-open-data-mcp --transport http --port 8080      # Streamable HTTP 远程（进阶可选）
 ```
 
 客户端配置只需：`command: uvx, args: ["shanghai-library-open-data-mcp"]`。
+
+### Streamable HTTP 传输（进阶，可选）
+
+除 stdio 外，本服务原生支持 Streamable HTTP（`slc_mcp_http.py`，纯标准库实现）：
+- `POST /mcp` 处理 JSON-RPC（initialize 时签发 `Mcp-Session-Id`，通知类返回 202）
+- `GET /mcp` 提供 SSE 流
+- 已开启 CORS，便于网页端 / 远程网络调用
+
+> 适合网页版 AI、手机端，或多人共用同一服务；需自行把服务跑在可访问的地址上。个人在编辑器本地使用，stdio 已足够，无需此模式。
 
 ## APIKey 说明
 
@@ -97,11 +104,11 @@ OpenSH-mcp/
 ├── README.md                 # 本文件
 ├── pyproject.toml            # PyPI 打包配置（uvx 入口）
 ├── slc_mcp_server.py         # MCP 服务主程序（stdio，纯标准库）
+├── slc_mcp_http.py           # Streamable HTTP 传输层（纯标准库，进阶可选）
 ├── slc_endpoints.py          # 97 个 webapi 接口注册表（自动生成）
 ├── gen_endpoints.py          # 接口注册表生成器（从官方 API 文档解析）
 ├── souyun_poem.py            # 搜韵诗词/韵典/对仗采集（免 token）
 ├── rag_kb.py                 # RAG 知识库骨架（纯标准库 TF-IDF）
-├── setup_mcp_key.py          # WorkBuddy 一键安装脚本（不含 Key）
 ├── mcp.json.template         # MCP 客户端配置模板（不含 Key）
 └── tests/                    # 测试（从环境变量读 Key，缺失会提示）
     ├── test_stdio.py         #   stdio 端到端（协议 + 真实调用）
