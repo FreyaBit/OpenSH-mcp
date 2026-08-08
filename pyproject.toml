@@ -9,7 +9,7 @@ description = "上海图书馆开放数据 MCP 服务：纪年/家谱/建筑/红
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
-authors = [{ name = "FreyaWu" }]
+authors = [{ name = "FreyaBit" }]
 keywords = ["mcp", "model-context-protocol", "上海图书馆", "library", "open-data", "古籍", "纪年", "诗词"]
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -26,4 +26,11 @@ Repository = "https://github.com/FreyaBit/OpenSH-mcp"
 shanghai-library-open-data-mcp = "slc_mcp_server:cli"
 
 [tool.hatch.build.targets.wheel]
-py-modules = ["slc_mcp_server", "slc_mcp_http", "slc_endpoints"]
+only-include = [
+    "slc_mcp_server.py",
+    "slc_mcp_http.py",
+    "slc_endpoints.py",
+    "gen_endpoints.py",
+    "souyun_poem.py",
+    "rag_kb.py",
+]
