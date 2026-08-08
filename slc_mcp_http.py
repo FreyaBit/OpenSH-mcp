@@ -51,7 +51,7 @@ def _process_message(m):
 
 class _Handler(BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
-    server_version = "ShanghaiLibraryOpenDataMCP/1.3.0"
+    server_version = "ShanghaiLibraryOpenDataMCP/1.3.1"
 
     def _cors(self):
         self.send_header("Access-Control-Allow-Origin", "*")

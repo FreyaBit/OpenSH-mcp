@@ -263,52 +263,127 @@ DATASETS = {
 }
 
 
-def S(name, desc, props, required=None):
+# 所有工具均为「只读检索」，不修改任何远端数据，统一标注 annotations
+def _ro(title):
+    return {"title": title, "readOnlyHint": True, "openWorldHint": True}
+
+
+# 通用 webapi 返回结构（由 _wrap 包裹）
+_WRAP_OUT = {
+    "type": "object",
+    "description": "接口统一返回：status 为状态码，data 为解析后的 JSON，text 为非 JSON 时的原始文本",
+    "properties": {
+        "status": {"type": "integer", "description": "HTTP/业务状态码（200 表示成功）"},
+        "data": {"type": "object", "description": "接口返回的 JSON 数据，具体结构随接口而异"},
+        "text": {"type": "string", "description": "非 JSON 响应时的原始文本（已截断）"}
+    }
+}
+
+# slc_endpoints 的返回结构
+_EP_OUT = {
+    "type": "object",
+    "description": "接口清单：count 为数量，endpoints 为各接口元信息数组",
+    "properties": {
+        "count": {"type": "integer", "description": "可用接口数量"},
+        "endpoints": {"type": "array", "items": {"type": "object", "properties": {
+            "id": {"type": "string", "description": "接口 id"},
+            "family": {"type": "string", "description": "所属家族/分类"},
+            "path": {"type": "string", "description": "接口路径模板"},
+            "params": {"type": "object", "description": "支持的查询参数"},
+            "path_params": {"type": "array", "items": {"type": "string"}, "description": "路径占位参数名"}
+        }}}
+    }
+}
+
+# slc_sparql 的返回结构
+_SPARQL_OUT = {
+    "type": "object",
+    "description": "SPARQL 说明：status 恒为 blocked，note 为不可用原因与替代方案",
+    "properties": {
+        "status": {"type": "string", "description": "固定为 blocked"},
+        "note": {"type": "string", "description": "说明与替代调用建议"}
+    }
+}
+
+# slc_datasets 的返回结构
+_DATASETS_OUT = {
+    "type": "object",
+    "description": "数据集与第三方机构总览，含主题、方向、核心平台、第三方机构与离线包说明",
+    "properties": {
+        "主题": {"type": "string"},
+        "方向": {"type": "array", "items": {"type": "string"}},
+        "核心平台(需Key)": {"type": "object"},
+        "第三方机构(部分)": {"type": "object"},
+        "离线包": {"type": "string"}
+    }
+}
+
+
+def S(name, desc, props, required=None, output_schema=None, annotations=None):
     """构造一个工具描述，避免手写嵌套括号出错。"""
     sch = {"type": "object", "properties": props}
     if required:
         sch["required"] = required
-    return {"name": name, "description": desc, "inputSchema": sch}
+    tool = {"name": name, "description": desc, "inputSchema": sch}
+    if output_schema is not None:
+        tool["outputSchema"] = output_schema
+    if annotations is not None:
+        tool["annotations"] = annotations
+    return tool
 
 
 TOOLS = [
-    S("slc_era", "中国历史纪年表：输入朝代/年号返回公元年范围，或反之。例：明 -> 1368~1644。请传入 key（自己的上海图书馆开放数据 APIKey）。",
+    S("slc_era", "中国历史纪年表：输入朝代/年号返回公元年范围，或反之。例：明 -> 1368~1644。需传入 key（你自己的上海图书馆开放数据 APIKey）。",
       {"term": {"type": "string", "description": "朝代/年号/公元年，如 明、洪武、1369"},
-       "key": {"type": "string", "description": "上海图书馆开放数据 APIKey（必填）"}}, ["term"]),
-    S("slc_jiapu", "家谱谱目检索（data1）。可按谱名/姓氏检索",
-      {"title": {"type": "string"}, "familyname": {"type": "string"},
-       "key": {"type": "string", "description": "上海图书馆开放数据 APIKey（必填）"}}),
-    S("slc_building", "武康路历史建筑检索（已验证可用）",
+       "key": {"type": "string", "description": "上海图书馆开放数据 APIKey（必填，也可走环境变量 SLC_API_KEY）"}}, ["term"],
+      output_schema=_WRAP_OUT, annotations=_ro("中国历史纪年检索")),
+    S("slc_jiapu", "家谱谱目检索（data1 平台）：可按谱名或姓氏检索家谱。需传入 key。",
+      {"title": {"type": "string", "description": "谱名关键词，如 王氏家谱"},
+       "familyname": {"type": "string", "description": "姓氏，如 王"},
+       "key": {"type": "string", "description": "上海图书馆开放数据 APIKey（必填）"}},
+      output_schema=_WRAP_OUT, annotations=_ro("家谱谱目检索")),
+    S("slc_building", "武康路历史建筑检索（已验证可用）：按路名/建筑关键词检索。需传入 key。",
       {"keyword": {"type": "string", "description": "路名/建筑关键词，如 武康路"},
-       "key": {"type": "string", "description": "上海图书馆开放数据 APIKey（必填）"}}, ["keyword"]),
-    S("slc_red_event", "红色旅游/历史事件检索",
-      {"keyword": {"type": "string"}, "date": {"type": "string", "description": "年份，如 1940"},
-       "key": {"type": "string", "description": "上海图书馆开放数据 APIKey（必填）"}}),
-    S("slc_api", "通用分发器：调用 api_2025 注册的全部 webapi 接口（家谱/古籍/盛档/人名库/碑帖/电影/期刊/舆图/书目/地名志/武康路 等 97 个）。endpoint 填接口 id；params 填查询参数(JSON)；path_args 填路径占位{0}{1}；key 填自己的上海图书馆开放数据 APIKey（必填）。先用 slc_endpoints 查 id。",
-      {"endpoint": {"type": "string", "description": "接口 id 或 家族名(取该家族首个接口)"},
-       "params": {"type": "object", "description": "查询参数，如 freetext=江南, pageNum=1"},
+       "key": {"type": "string", "description": "上海图书馆开放数据 APIKey（必填）"}}, ["keyword"],
+      output_schema=_WRAP_OUT, annotations=_ro("历史建筑检索")),
+    S("slc_red_event", "红色旅游/历史事件检索：按关键词或年份检索。需传入 key。",
+      {"keyword": {"type": "string", "description": "事件关键词，如 中共一大会址"},
+       "date": {"type": "string", "description": "年份，如 1940（与 keyword 二选一）"},
+       "key": {"type": "string", "description": "上海图书馆开放数据 APIKey（必填）"}},
+      output_schema=_WRAP_OUT, annotations=_ro("红色旅游事件检索")),
+    S("slc_api", "通用分发器：调用 api_2025 注册的全部 webapi 接口（家谱/古籍/盛档/人名库/碑帖/电影/期刊/舆图/书目/地名志/武康路 等 97 个）。endpoint 填接口 id；params 填查询参数(JSON)；path_args 填路径占位 {0}{1}；key 填你自己的上海图书馆开放数据 APIKey（必填）。先用 slc_endpoints 查 id。",
+      {"endpoint": {"type": "string", "description": "接口 id 或 家族名（取该家族首个接口），如 work_data / 武康路历史"},
+       "params": {"type": "object", "description": "查询参数（JSON 对象），如 {'freetext':'江南','pageNum':1}"},
        "path_args": {"type": "array", "items": {"type": "string"}, "description": "路径占位 {0}{1} 的取值列表"},
-       "key": {"type": "string", "description": "上海图书馆开放数据 APIKey（必填）"}}, ["endpoint"]),
+       "key": {"type": "string", "description": "上海图书馆开放数据 APIKey（必填）"}}, ["endpoint"],
+      output_schema=_WRAP_OUT, annotations=_ro("通用接口分发器")),
     S("slc_endpoints", "列出全部可用 webapi 接口（id/家族/路径/参数），可按 family 过滤。用于发现能力。",
-      {"family": {"type": "string", "description": "可选：按家族过滤，如 古籍循证 / 武康路历史"}}),
-    S("slc_datasets", "数据集与第三方机构总览", {}),
-    S("slc_sparql", "SPARQL 图查询说明（该平台 Key 仅网页端可用）", {}),
-    S("slc_raw", "任意 data1.library.sh.cn 路径的 GET 兜底调用",
-      {"path": {"type": "string", "description": "路径，如 /webapi/beitie/search"},
-       "params": {"type": "object"},
-       "key": {"type": "string", "description": "上海图书馆开放数据 APIKey（必填）"}}, ["path"]),
-    S("souyun_poem", "搜韵诗词检索（免token）：按作者/标题/诗句/朝代/体裁/韵部查诗词，服务 AIGC 歌词。",
-      {"keyword": {"type": "string", "description": "关键词或诗ID，如 王之涣 / 登鹳雀楼 / 7734"},
-       "scope": {"type": "string", "description": "All/Author/Title/Sentence"},
-       "dynasty": {"type": "string", "description": "如 Tang/Song"},
-       "type": {"type": "string", "description": "体裁，如 QiLv/WuJue"},
-       "rhyme": {"type": "string", "description": "韵部，如 江/尤"},
-       "pageno": {"type": "integer"}}, ["keyword"]),
-    S("souyun_rhyme", "搜韵韵典：查字所属韵部、词末/词首典故、句末诗例（免token）",
-      {"char": {"type": "string", "description": "韵字，如 天/月"},
-       "qtype": {"type": "integer", "description": "0全部 1韵目 2词末典故 3词首 4词末 5句末诗例"}}, ["char"]),
-    S("souyun_couplet", "搜韵对仗词汇：返回与输入字/词对仗的词汇（免token），写对仗句用",
-      {"word": {"type": "string", "description": "字或词，如 人间/月"}}, ["word"]),
+      {"family": {"type": "string", "description": "可选：按家族过滤，如 古籍循证 / 武康路历史"}},
+      output_schema=_EP_OUT, annotations=_ro("接口清单发现")),
+    S("slc_datasets", "数据集与第三方机构总览：上海图书馆核心平台、搜韵诗词、韬奋纪念馆、Artlib、CBDB、全国报刊索引等。", {},
+      output_schema=_DATASETS_OUT, annotations=_ro("数据集总览")),
+    S("slc_sparql", "SPARQL 图查询说明：该平台 Key 仅网页端可用，本工具返回友好提示与替代方案而非报错。", {},
+      output_schema=_SPARQL_OUT, annotations=_ro("SPARQL 说明")),
+    S("slc_raw", "任意 data1.library.sh.cn 路径的 GET 兜底调用：当专属工具或 slc_api 不满足时使用。需传入 key。",
+      {"path": {"type": "string", "description": "接口路径，如 /webapi/beitie/search"},
+       "params": {"type": "object", "description": "查询参数（JSON 对象），如 {'freetext':'兰亭','pageNum':1}"},
+       "key": {"type": "string", "description": "上海图书馆开放数据 APIKey（必填）"}}, ["path"],
+      output_schema=_WRAP_OUT, annotations=_ro("原始接口兜底调用")),
+    S("souyun_poem", "搜韵诗词检索（免 token）：按作者/标题/诗句/朝代/体裁/韵部查诗词，服务于 AIGC 歌词与创作。",
+      {"keyword": {"type": "string", "description": "关键词或诗 ID，如 王之涣 / 登鹳雀楼 / 7734"},
+       "scope": {"type": "string", "description": "检索范围：All / Author / Title / Sentence"},
+       "dynasty": {"type": "string", "description": "朝代，如 Tang / Song"},
+       "type": {"type": "string", "description": "体裁，如 QiLv / WuJue"},
+       "rhyme": {"type": "string", "description": "韵部，如 江 / 尤"},
+       "pageno": {"type": "integer", "description": "页码，从 1 开始"}}, ["keyword"],
+      output_schema=_WRAP_OUT, annotations=_ro("搜韵诗词检索")),
+    S("souyun_rhyme", "搜韵韵典（免 token）：查字所属韵部、词末/词首典故、句末诗例。",
+      {"char": {"type": "string", "description": "韵字，如 天 / 月"},
+       "qtype": {"type": "integer", "description": "0全部 1韵目 2词末典故 3词首 4词末 5句末诗例"}}, ["char"],
+      output_schema=_WRAP_OUT, annotations=_ro("搜韵韵典")),
+    S("souyun_couplet", "搜韵对仗词汇（免 token）：返回与输入字/词对仗的词汇，用于写对仗句。",
+      {"word": {"type": "string", "description": "字或词，如 人间 / 月"}}, ["word"],
+      output_schema=_WRAP_OUT, annotations=_ro("搜韵对仗词汇")),
 ]
 
 HANDLERS = {
@@ -358,7 +433,11 @@ def handle_message(req):
         return {"jsonrpc": "2.0", "id": rid, "result": {
             "protocolVersion": pv,
             "capabilities": {"tools": {}},
-            "serverInfo": {"name": "shanghai-library-opendata", "version": "1.3.0"},
+            "serverInfo": {
+                "name": "shanghai-library-opendata",
+                "version": "1.3.1",
+                "description": "上海图书馆开放数据 MCP：提供中国历史纪年、家谱、历史建筑、红色事件、97 个 webapi 接口，以及搜韵诗词（诗词检索/韵典/对仗词汇）的只读检索服务。"
+            },
             "instructions": INSTRUCTIONS}}
     if method == "tools/list":
         return {"jsonrpc": "2.0", "id": rid, "result": {"tools": TOOLS}}
