@@ -1,0 +1,31 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
+  "name": "io.github.FreyaBit/shanghai-library-open-data-mcp",
+  "description": "上海图书馆开放数据 MCP 服务：纪年/家谱/建筑/红色事件/古籍循证/书目/人名/地名/舆图/碑帖/手迹/期刊/电影/音乐/照片等 97 个 webapi 接口 + 搜韵诗词（免 token）的 Model Context Protocol 服务。支持 stdio 与 Streamable HTTP，纯标准库零依赖。",
+  "status": "active",
+  "repository": {
+    "url": "https://github.com/FreyaBit/OpenSH-mcp",
+    "source": "github"
+  },
+  "version": "1.3.0",
+  "packages": [
+    {
+      "registry_type": "pypi",
+      "registry_base_url": "https://pypi.org",
+      "identifier": "shanghai-library-open-data-mcp",
+      "version": "1.3.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "environment_variables": [
+        {
+          "description": "上海图书馆开放数据 APIKey（可选；不填则在工具参数 key 中传）",
+          "is_required": false,
+          "format": "string",
+          "is_secret": true,
+          "name": "SLC_API_KEY"
+        }
+      ]
+    }
+  ]
+}
