@@ -22,3 +22,9 @@ venv/
 Thumbs.db
 .idea/
 .vscode/
+
+# 构建产物
+/dist/
+/build/
+*.whl
+*.egg-info/
