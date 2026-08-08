@@ -1,6 +1,8 @@
 # 上海图书馆开放数据 MCP
 
-把上海图书馆开放数据平台的 **97 个 webapi 接口** + 搜韵诗词库（199 万首，免 token）封装成 12 个 MCP 工具，可接入 WorkBuddy、Cursor、Claude Desktop 等任意 MCP 客户端。
+[![smithery badge](https://smithery.ai/badge/haoplaytime/shanghai-library-open-data-mcp)](https://smithery.ai/servers/haoplaytime/shanghai-library-open-data-mcp)
+
+把上海图书馆开放数据平台的 **99 个 webapi 接口** + 搜韵诗词库（199 万首，免 token）封装成 12 个 MCP 工具，可接入 WorkBuddy、Cursor、Claude Desktop 等任意 MCP 客户端。
 
 <!-- mcp-name: io.github.FreyaBit/shanghai-library-open-data-mcp -->
 
@@ -15,14 +17,14 @@
 ## 数据源与致谢
 
 - **上海图书馆开放数据平台（官方）**：https://opendata.library.sh.cn/opendata/
-  衷心感谢**上海图书馆官方**开放数据平台提供权威、丰富且持续维护的历史文献与文脉数据接口。本项目的全部核心数据能力（97 个 webapi）均建立在上海图书馆开放数据之上，若无官方的开放与授权，本项目无从实现。
+  衷心感谢**上海图书馆官方**开放数据平台提供权威、丰富且持续维护的历史文献与文脉数据接口。本项目的全部核心数据能力（99 个 webapi）均建立在上海图书馆开放数据之上，若无官方的开放与授权，本项目无从实现。
 - **搜韵诗词**：https://api.sou-yun.cn/open （199 万首诗词，免 token）
 - 本仓库接口版权归各数据方所有，使用请遵守各平台开放数据的使用条款；调用方须使用自己在平台注册的 APIKey，本仓库不内置、不收集任何密钥。
 - 本项目已发布至 PyPI、MCP 官方 Registry（`io.github.FreyaBit/shanghai-library-open-data-mcp`）、Smithery、ModelScope 与 GitHub，便于各 MCP 客户端一键接入。
 
 ## 特性
 
-- 🧩 **12 个 MCP 工具**：覆盖家谱 / 古籍 / 碑帖 / 武康路 / 书目 / 地名志 / 红色事件 / 纪年表 / 电影 / 舆图 / 手迹 / 人名库等 97 个官方接口 + 搜韵诗词
+- 🧩 **12 个 MCP 工具**：覆盖家谱 / 古籍 / 碑帖 / 武康路 / 书目 / 地名志 / 红色事件 / 纪年表 / 电影 / 舆图 / 手迹 / 人名库 / 戏单等 99 个官方接口 + 搜韵诗词
 - 🔑 **密钥由使用者提供**：通过环境变量 `SLC_API_KEY` 或工具参数 `key` 传入，代码不内置任何密钥
 - 🐍 **零第三方依赖**：仅用 Python 标准库（urllib + json），无需 `pip install`
 - 🎵 **AIGC 歌词素材**：`souyun_poem` 免 token 检索 199 万首诗词（按作者/标题/诗句/朝代/体裁/韵部），`souyun_rhyme` / `souyun_couplet` 提供韵典和对仗词汇
@@ -32,7 +34,7 @@
 
 | 工具 | 说明 | 需要 Key |
 |---|---|---|
-| `slc_endpoints` | 列出全部 97 个接口（id/家族/路径/参数），发现能力 | ❌ |
+| `slc_endpoints` | 列出全部 99 个接口（id/家族/路径/参数），发现能力 | ❌ |
 | `slc_api` | 通用分发器：调用任意 webapi 接口 | ✅ |
 | `slc_era` | 中国历史纪年表：朝代/年号 ↔ 公元年 | ✅ |
 | `slc_jiapu` | 家谱谱目检索 | ✅ |
@@ -44,7 +46,7 @@
 | `souyun_rhyme` | 韵典：查字所属韵部、典故、诗例 | ❌ |
 | `souyun_couplet` | 对仗词汇 | ❌ |
 
-> 接口家族：近代城市文化(20)、古籍循证(15)、国漫革命文献(7)、武康路历史(7)、纪年表关联数据(5)、韬奋纪念馆(4)、书目数据(4)、家谱(4)、地名纪年(4)、竞赛PDF文献(3)、知识图谱人物(2)、文化总库机构(2)、舆图(2)、手迹(2)、红色旅游事件(2)、地名志(2)、纪年(2)、人名规范库(1)、机构名录(1)、其他(8)。
+> 接口家族：近代城市文化(20)、古籍循证(15)、国漫革命文献(7)、武康路历史(7)、纪年表关联数据(5)、韬奋纪念馆(4)、书目数据(4)、家谱(4)、地名纪年(4)、竞赛PDF文献(3)、知识图谱人物(2)、文化总库机构(2)、舆图(2)、手迹(2)、红色旅游事件(2)、地名志(2)、纪年(2)、人名规范库(1)、机构名录(1)、戏单(2)、其他(8)。
 
 ## 快速开始
 
@@ -146,7 +148,7 @@ OpenSH-mcp/
 ├── pyproject.toml            # PyPI 打包配置（uvx 入口）
 ├── slc_mcp_server.py         # MCP 服务主程序（stdio，纯标准库）
 ├── slc_mcp_http.py           # Streamable HTTP 传输层（纯标准库，进阶可选）
-├── slc_endpoints.py          # 97 个 webapi 接口注册表（自动生成）
+├── slc_endpoints.py          # 99 个 webapi 接口注册表（自动生成）
 ├── gen_endpoints.py          # 接口注册表生成器（从官方 API 文档解析）
 ├── souyun_poem.py            # 搜韵诗词/韵典/对仗采集（免 token）
 ├── rag_kb.py                 # RAG 知识库骨架（纯标准库 TF-IDF）

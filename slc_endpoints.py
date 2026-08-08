@@ -98,4 +98,6 @@ ENDPOINTS = [
     {"id": "jp_organization", "method": "GET", "path": "https://data1.library.sh.cn/jp/organization/{0}", "params": [], "path_params": ["[参数1]"], "family": "家谱", "needs_key": True},
     {"id": "data1_library_sh_cn_sparql", "method": "GET", "path": "https://data1.library.sh.cn/sparql", "params": [], "path_params": [], "family": "其他", "needs_key": True},
     {"id": "data_jsonld", "method": "GET", "path": "https://data1.library.sh.cn/data/jsonld", "params": ["uri"], "path_params": [], "family": "纪年表关联数据", "needs_key": True},
+    {"id": "xd_list", "method": "GET", "path": "https://data1.library.sh.cn/webapi/xd/list", "params": ["current_page", "page_size", "keywords", "event_name", "instance_title", "call_number", "works_name", "performance_unit", "performance_time", "work_type"], "path_params": [], "family": "戏单", "needs_key": True},
+    {"id": "xd_detail", "method": "GET", "path": "https://data1.library.sh.cn/webapi/xd/detail", "params": ["nid"], "path_params": [], "family": "戏单", "needs_key": True},
 ]

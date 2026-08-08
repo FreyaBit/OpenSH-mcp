@@ -5,7 +5,7 @@
 工具清单：
   数据平台（data1.library.sh.cn，需 SLC_API_KEY）：
     slc_era / slc_jiapu / slc_building / slc_red_event
-    slc_api          【通用分发器】调用 api_2025 注册的 97 个 webapi 接口
+    slc_api          【通用分发器】调用 api_2025 注册的 99 个 webapi 接口
     slc_endpoints    列出全部可用接口（发现能力）
     slc_datasets / slc_sparql / slc_raw
   搜韵诗词（api.sou-yun.cn/open，免 token，服务 AIGC 歌曲）：
@@ -250,7 +250,7 @@ DATASETS = {
     "方向": ["应用开发及智能体", "创意论文", "AIGC应用(微电影/歌曲/海报)"],
     "核心平台(需Key)": {
         "纪年/关联数据/SPARQL/内容协商": "data.library.sh.cn",
-        "分类型 webapi(97个)": "data1.library.sh.cn，见 slc_endpoints",
+        "分类型 webapi(99个)": "data1.library.sh.cn，见 slc_endpoints",
     },
     "第三方机构(部分)": {
         "搜韵诗词(199万首/对仗300万)": "api.sou-yun.cn/open，免token，见 souyun_* 工具",
@@ -351,7 +351,7 @@ TOOLS = [
        "date": {"type": "string", "description": "年份，如 1940（与 keyword 二选一）"},
        "key": {"type": "string", "description": "上海图书馆开放数据 APIKey（必填）"}},
       output_schema=_WRAP_OUT, annotations=_ro("红色旅游事件检索")),
-    S("slc_api", "通用分发器：调用 api_2025 注册的全部 webapi 接口（家谱/古籍/盛档/人名库/碑帖/电影/期刊/舆图/书目/地名志/武康路 等 97 个）。endpoint 填接口 id；params 填查询参数(JSON)；path_args 填路径占位 {0}{1}；key 填你自己的上海图书馆开放数据 APIKey（必填）。先用 slc_endpoints 查 id。",
+    S("slc_api", "通用分发器：调用 api_2025 注册的全部 webapi 接口（家谱/古籍/盛档/人名库/碑帖/电影/期刊/舆图/书目/地名志/武康路 等 99 个）。endpoint 填接口 id；params 填查询参数(JSON)；path_args 填路径占位 {0}{1}；key 填你自己的上海图书馆开放数据 APIKey（必填）。先用 slc_endpoints 查 id。",
       {"endpoint": {"type": "string", "description": "接口 id 或 家族名（取该家族首个接口），如 work_data / 武康路历史"},
        "params": {"type": "object", "description": "查询参数（JSON 对象），如 {'freetext':'江南','pageNum':1}"},
        "path_args": {"type": "array", "items": {"type": "string"}, "description": "路径占位 {0}{1} 的取值列表"},
@@ -399,7 +399,7 @@ INSTRUCTIONS = """\
 
 你能做什么：
 - 检索上海图书馆开放数据：中国历史纪年、家谱、武康路历史建筑、红色旅游事件、
-  古籍循证、书目/人名/地名/舆图/碑帖/手迹/期刊/电影/音乐/照片等 97 个 webapi 接口，
+  古籍循证、书目/人名/地名/舆图/碑帖/手迹/期刊/电影/音乐/照片等 99 个 webapi 接口，
   以及搜韵诗词（诗词检索、韵典、对仗词汇，免 token）。
 - 用 slc_endpoints 发现全部可用接口；用 slc_api 通用分发任意接口；用 slc_raw 兜底调用。
 
@@ -435,8 +435,8 @@ def handle_message(req):
             "capabilities": {"tools": {}},
             "serverInfo": {
                 "name": "shanghai-library-opendata",
-                "version": "1.3.1",
-                "description": "上海图书馆开放数据 MCP：提供中国历史纪年、家谱、历史建筑、红色事件、97 个 webapi 接口，以及搜韵诗词（诗词检索/韵典/对仗词汇）的只读检索服务。"
+                "version": "1.3.2",
+                "description": "上海图书馆开放数据 MCP：提供中国历史纪年、家谱、历史建筑、红色事件、99 个 webapi 接口，以及搜韵诗词（诗词检索/韵典/对仗词汇）的只读检索服务。"
             },
             "instructions": INSTRUCTIONS}}
     if method == "tools/list":

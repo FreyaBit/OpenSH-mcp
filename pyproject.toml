@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "shanghai-library-open-data-mcp"
-version = "1.3.1"
+version = "1.3.2"
 description = "上海图书馆开放数据 MCP 服务：纪年/家谱/建筑/红色事件/古籍/书目/诗词等开放数据的 Model Context Protocol 服务（stdio + Streamable HTTP，纯标准库零依赖）"
 readme = "README.md"
 requires-python = ">=3.11"
