@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "上海图书馆开放数据": {
+      "command": "python",
+      "args": [
+        "此处填写 slc_mcp_server.py 的绝对路径，例如 C:/Users/你的用户名/.../slc_mcp_server.py"
+      ],
+      "env": {
+        "SLC_API_KEY": "在此填写你自己的上海图书馆开放数据 APIKey"
+      },
+      "disabled": false
+    }
+  }
+}

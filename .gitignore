@@ -1,0 +1,24 @@
+# 密钥与本地配置——绝不入库
+mcp.json
+.workbuddy/
+*.key
+*.pem
+.env
+
+# 官方文档与离线数据包（体积大/版权方所有，不入库）
+*.pdf
+*.zip
+*.rar
+api_2025.txt
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# 系统与编辑器
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
