@@ -458,8 +458,14 @@ def handle_message(req):
 
 
 def main():
-    for line in sys.stdin:
-        line = line.strip()
+    # 强制以 UTF-8 读写 stdio：Windows 下默认按系统 locale(cp936/GBK) 编解码，
+    # 会把多字节 UTF-8 中文拆成孤立代理对，导致中文参数（搜韵韵典/诗词/对仗、碑帖单字等）
+    # 报 'utf-8' codec can't encode character '\udcXX' (surrogates)，且回写中文时乱码。
+    # 直接操作二进制 buffer 并按 UTF-8 编解码，彻底绕开 locale 编码器。
+    stdin_buf = getattr(sys.stdin, "buffer", sys.stdin)
+    stdout_buf = getattr(sys.stdout, "buffer", sys.stdout)
+    for raw in stdin_buf:
+        line = raw.decode("utf-8", "replace").strip()
         if not line:
             continue
         try:
@@ -469,8 +475,9 @@ def main():
         out = handle_message(req)
         if out is None:
             continue
-        sys.stdout.write(json.dumps(out, ensure_ascii=False) + "\n")
-        sys.stdout.flush()
+        data = (json.dumps(out, ensure_ascii=False) + "\n").encode("utf-8")
+        stdout_buf.write(data)
+        stdout_buf.flush()
 
 
 def cli():
