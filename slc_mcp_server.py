@@ -457,6 +457,56 @@ def handle_message(req):
     return {"jsonrpc": "2.0", "id": rid, "result": {}}
 
 
+def _recover_surrogateescape(s):
+    """还原由 surrogateescape / 孤立代理对（U+DC00-U+DFFF）造成的乱码。
+
+    某些 MCP 客户端在序列化中文参数时，会把 UTF-8 字节用 surrogateescape 方式
+    解码成孤立代理对（如「风」E9 A3 8E -> 三个 U+DCxx），再序列化为 JSON 里的
+    \\udcxx 转义。这里把 U+DCxx 还原为对应字节，再按 UTF-8 重新解码，找回原字符。
+    若字符串不含孤立代理对则原样返回。
+    """
+    if not isinstance(s, str) or not any(0xDC00 <= ord(c) <= 0xDFFF for c in s):
+        return s
+    ba = bytearray()
+    out = []
+    for c in s:
+        o = ord(c)
+        if 0xDC00 <= o <= 0xDFFF:
+            ba.append(o - 0xDC00)
+        else:
+            if ba:
+                out.append(ba.decode("utf-8", "replace"))
+                ba = bytearray()
+            out.append(c)
+    if ba:
+        out.append(ba.decode("utf-8", "replace"))
+    return "".join(out)
+
+
+def _fix_surrogates(obj):
+    """递归还原 dict/list/str 中的孤立代理对。"""
+    if isinstance(obj, str):
+        return _recover_surrogateescape(obj)
+    if isinstance(obj, list):
+        return [_fix_surrogates(x) for x in obj]
+    if isinstance(obj, dict):
+        return {k: _fix_surrogates(v) for k, v in obj.items()}
+    return obj
+
+
+def _sanitize_surrogates(obj):
+    """递归把孤立代理对(U+D800-U+DFFF)替换为 U+FFFD，确保输出可安全 UTF-8 编码。"""
+    if isinstance(obj, str):
+        if any(0xD800 <= ord(c) <= 0xDFFF for c in obj):
+            return "".join("\ufffd" if 0xD800 <= ord(c) <= 0xDFFF else c for c in obj)
+        return obj
+    if isinstance(obj, list):
+        return [_sanitize_surrogates(x) for x in obj]
+    if isinstance(obj, dict):
+        return {k: _sanitize_surrogates(v) for k, v in obj.items()}
+    return obj
+
+
 def main():
     # 强制以 UTF-8 读写 stdio：Windows 下默认按系统 locale(cp936/GBK) 编解码，
     # 会把多字节 UTF-8 中文拆成孤立代理对，导致中文参数（搜韵韵典/诗词/对仗、碑帖单字等）
@@ -469,15 +519,37 @@ def main():
         if not line:
             continue
         try:
-            req = json.loads(line)
-        except Exception:
-            continue
-        out = handle_message(req)
-        if out is None:
-            continue
-        data = (json.dumps(out, ensure_ascii=False) + "\n").encode("utf-8")
-        stdout_buf.write(data)
-        stdout_buf.flush()
+            try:
+                req = _fix_surrogates(json.loads(line))
+            except Exception:
+                continue
+            out = handle_message(req)
+            if out is None:
+                continue
+            # 兜底净化：即便响应里混入了代理对，也绝不外泄或崩溃
+            out = _sanitize_surrogates(out)
+            try:
+                data = (json.dumps(out, ensure_ascii=False) + "\n").encode("utf-8")
+            except UnicodeEncodeError:
+                data = (json.dumps(out, ensure_ascii=True) + "\n").encode("utf-8")
+            stdout_buf.write(data)
+            stdout_buf.flush()
+        except Exception as _e:
+            # 任何意外都返回干净错误，绝不外泄代理对或让进程崩溃
+            try:
+                rid = None
+                try:
+                    rid = json.loads(line).get("id")
+                except Exception:
+                    pass
+                err = _sanitize_surrogates({
+                    "jsonrpc": "2.0", "id": rid,
+                    "error": {"code": -32603, "message": "internal error: " + str(_e)},
+                })
+                stdout_buf.write((json.dumps(err, ensure_ascii=False) + "\n").encode("utf-8", "replace"))
+                stdout_buf.flush()
+            except Exception:
+                pass
 
 
 def cli():
