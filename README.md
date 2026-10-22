@@ -1,6 +1,6 @@
 # 上海图书馆开放数据 MCP
 
-[![smithery badge](https://smithery.ai/badge/haoplaytime/shanghai-library-open-data-mcp)](https://smithery.ai/servers/haoplaytime/shanghai-library-open-data-mcp)
+[![LightNow capabilities](https://lightnow.ai/badge/io.github.FreyaBit/shanghai-library-open-data-mcp)](https://lightnow.ai/servers/io.github.FreyaBit/shanghai-library-open-data-mcp)
 
 把上海图书馆开放数据平台的 **99 个 webapi 接口** + 搜韵诗词库（199 万首，免 token）封装成 12 个 MCP 工具，可接入 WorkBuddy、Cursor、Claude Desktop 等任意 MCP 客户端。
 
